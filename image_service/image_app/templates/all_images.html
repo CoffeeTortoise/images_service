@@ -1,0 +1,35 @@
+<!DOCTYPE html>
+<html>
+<head>
+    <title>All Images</title>
+</head>
+<body>
+    <h1>All Uploaded Images</h1>
+    
+    <p><a href="{% url 'upload_image' %}">Upload New Image</a></p>
+    
+    {% if images %}
+        <ul>
+            {% for image in images %}
+                <li>
+                    <h3>{{ image.name }}</h3>
+                    <p>Uploaded on: {{ image.uploaded_at }}</p>
+                    
+                    <!-- Отображаем изображение, используя URL для его получения -->
+                    <img src="" alt="{{ image.name }}" style="max-width: 300px;">
+                    
+                    <p>
+                        <a href="{% url 'get_image' pk=image.id %}">View Image</a> |
+                        <a href="{% url 'delete_image' pk=image.id %}">Delete</a>
+                    </p>
+                </li>
+            {% endfor %}
+        </ul>
+    {% else %}
+        <p>No images uploaded yet.</p>
+    {% endif %}
+    
+    <hr>
+    <p><a href="/">Go to Home</a></p>
+</body>
+</html>

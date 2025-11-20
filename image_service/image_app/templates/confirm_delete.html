@@ -1,0 +1,22 @@
+<!DOCTYPE html>
+<html>
+<head>
+    <title>Confirm Deletion</title>
+</head>
+<body>
+    <h1>Confirm Image Deletion</h1>
+    <p>Are you sure you want to delete "{{ image.name }}"?</p>
+    
+    <!-- Отображаем миниатюру для подтверждения -->
+    <img src="" alt="{{ image.name }}" style="max-width: 300px;">
+
+    <form method="post">
+        {% csrf_token %}
+        <button type="submit">Delete</button>
+        <a href="{% url 'all_images' %}">Cancel</a>
+    </form>
+    
+    <hr>
+    <p><a href="/">Go to Home</a></p>
+</body>
+</html>
