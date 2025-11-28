@@ -9,4 +9,4 @@ class ImageSerializer(serializers.ModelSerializer):
         
         model = Image
         
-        fields = 'name', 'file', 'uploaded_at'
+        fields = '__all__'

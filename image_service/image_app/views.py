@@ -37,27 +37,46 @@ class ImageViewSet(viewsets.ModelViewSet):
     
     @action(detail=False, methods=['post'])
     def upload_image(self, request):
-        form = ImageUploadForm(request.POST, request.FILES)
-        if form.is_valid(): 
-           ImageViewSet.save_new_image(form)
-           return Response(
-               {'status': 'Success!'},
-               status=status.HTTP_201_CREATED
-           )
-        logger.error("Image upload failed with errors: %s", form.errors)
-        return Response(
-            {'status': 'Failure!'},
-            status=status.HTTP_400_bad_request
-        )
+        if 'file' not in request.FILES or request.FILES['file'] is None:
+            return Response(
+                {'status': 'Failure'},
+                status=status.HTTP_400_BAD_REQUEST
+            )
+        if 'name' not in request.FILES:
+            request.FILES['name'] = str(uuid.uuid4())
+        try:
+            img = Image(
+                name=request.FILES['name'],
+                file=request.FILES['file']
+            )
+            img.save()
+            return Response(
+                {'status': 'Success'},
+                status=status.HTTP_201_CREATED
+            )
+        except Exception:
+            return Response(
+                {'status': 'Failure'},
+                status=status.HTTP_400_BAD_REQUEST
+            )
     
     @action(detail=True, methods=['get'])
-    @cache_page(60 * 10)
     def get_image(self, request, pk=None):
-        image = get_object_or_404(Image, pk=pk)
-        return FileResponse(
-            image.file, content_type=(
-                'image/%s' % image.file.name.split('.')[-1]
+        try:
+            image_data = Image.objects.get(pk=pk)
+        except  Image.DoesNotExist:
+            return Response(
+                {'status': 'Failure'},
+                status=status.HTTP_404_NOT_FOUND
             )
+        img_serialized = ImageSerializer(image_data)
+        if not img_serialized.is_valid():
+            return Response(
+                {'status': 'Failure'},
+                status=status.HTTP_418_IM_A_TEAPOT
+            )
+        return Response(
+            img_serialized, status=status.HTTP_200_OK
         )
     
     @action(detail=False, methods=['get'])

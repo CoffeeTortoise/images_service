@@ -16,7 +16,7 @@ class RequestLoggingMiddleware:
             'body': request.body.decode('utf-8', errors='ignore')
         }
         
-        logger.info("Request Info: %s", request_info)
+        logger.info("Request Info: %s" % request_info)
 
         response = self.get_response(request)
 
@@ -25,6 +25,6 @@ class RequestLoggingMiddleware:
             'content_type': response.get('Content-Type'),
         }
         
-        logger.info("Response Info: %s", response_info)
+        logger.info("Response Info: %s" % response_info)
 
         return response

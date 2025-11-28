@@ -3,6 +3,7 @@
 *.png
 *.jpg
 *.jpeg
+*.sqlite3
 main.py
 __pycache__/
 images/

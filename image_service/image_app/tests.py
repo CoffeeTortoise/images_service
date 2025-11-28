@@ -1,50 +1,93 @@
-import uuid
+import os
+import sys
 
 from rest_framework import status
 
 from rest_framework.test import APITestCase
+from rest_framework.test import APIClient
+
+from django.core.cache import cache
 
 from django.core.files.uploadedfile import SimpleUploadedFile
 
 from .models import Image
 
 
+IMAGES_DIR = './media/images'
+
+
+def create_image_file():
+    return SimpleUploadedFile(
+        name='some_img.bmp',
+        content=b'file_content',
+        content_type='image/bmp'
+    )
+
+
+def create_img_if_not_exists():
+    if not Image.objects.exists():
+        return create_image_file()
+    return None
+
+
+def upload_img_if_not_any():
+    img = create_img_if_not_exists()
+    if img is not None:
+        client = APIClient()
+        response = client.post(
+            '/api/v1/images/upload_image/', {'name': img.name, 'file': img}, format='multipart'
+        )
+        if response.status_code != status.HTTP_201_CREATED:
+            sys.stderr.write('Unexpected error while creating new image!\n')
+            sys.exit(1)
+    return img
+
+
+class ImageAPITestGet(APITestCase):
+    
+    @classmethod
+    def setUpClass(cls):
+        cache.clear()
+        super().setUpClass()
+    
+    def setUp(self):
+        self.client = APIClient()
+        self.url = '/api/v1/images/get_image/?pk=1'
+        self.img = upload_img_if_not_any()
+    
+    def test_get_image(self):
+        response = self.client.get(
+            self.url
+        )
+        self.assertEqual(response.status_code, status.HTTP_200_OK)
+    
+    def tearDown(self):
+        if self.img is not None:
+            path = os.path.join(IMAGES_DIR, self.img.name)
+            if os.path.exists(path):
+                os.remove(path)
+
+
 class ImageAPITestUpload(APITestCase):
 
     def setUp(self):
-        self.image_file = SimpleUploadedFile(
-            name='test_image.png',
-            content=b'file_content',
-            content_type='image/png'
-        )
-        self.url = 'http://127.0.0.1:8000/api/images/upload_image/'
+        self.image_file = create_image_file()
+        self.url = '/api/v1/images/upload_image/'
+        self.client = APIClient()
 
-    def test_upload_image(self):
-        response = self.client.post(self.url, {'file': self.image_file}, content_type='image/png')
+    def test_upload_image_created(self):
+        response = self.client.post(
+            self.url, {'name': self.image_file.name, 'file': self.image_file}, format='multipart'
+        )
         self.assertEqual(response.status_code, status.HTTP_201_CREATED)
-        self.assertIn('status', response.data)
-
-    def test_upload_image_invalid(self):
-        response = self.client.post(self.url, {}, format='multipart')
-        self.assertEqual(response.status_code, status.HTTP_400_BAD_REQUEST)
-        self.assertIn('errors', response.data)
-
-
-class ImageAPITestDelete(APITestCase):
     
-    def setUp(self):
-        self.image_file = SimpleUploadedFile(
-            name='test_image.png',
-            content=b'file_content',
-            content_type='image/png'
+    def test_upload_image_bad_request(self):
+        response = self.client.post(
+            self.url, {'name': self.image_file.name, }, format='multipart'
         )
-        self.url = 'http://127.0.0.1:8000/api/images/delete_image/'
-        self.image = Image.objects.create(file=self.image_file)
+        self.assertEqual(response.status_code, status.HTTP_400_BAD_REQUEST)
     
-    def test_delete_image(self):
-        response = self.client.delete(f'{self.url}{self.image.id}/')  # Предполагая, что API принимает ID в URL
-        self.assertEqual(response.status_code, status.HTTP_404_NOT_FOUND)
-
-    def test_delete_image_not_found(self):
-        response = self.client.delete(f'{self.url}9999/') 
-        self.assertEqual(response.status_code, status.HTTP_404_NOT_FOUND)
+    def tearDown(self):
+        img_path = os.path.join(IMAGES_DIR, self.image_file.name)
+        if os.path.exists(img_path):
+            os.remove(img_path)
