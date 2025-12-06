@@ -1,0 +1,38 @@
+version: '3.8'
+
+services:
+  image_service:
+    build:
+      context: ./image_service
+      dockerfile: Dockerfile
+    ports:
+      - "8000:8000"
+    volumes:
+      - ./image_service:/app
+      - media_volume:/app/media
+    env_file:
+      - .env
+    healthcheck:
+      test: ["CMD", "curl", "-f", "http://image_service:8000/"]
+      interval: 30s
+      timeout: 10s
+      retries: 5
+  
+  service_api:
+    build:
+      context: ./service_api
+      dockerfile: Dockerfile
+    volumes:
+      - ./service_api:/app
+    depends_on:
+      - image_service 
+    ports:
+      - "2001:2001"
+    healthcheck:
+      test: ["CMD", "curl", "-f", "http://service_api:2001/"]
+      interval: 30s
+      timeout: 10s
+      retries: 5
+
+volumes:
+  media_volume:

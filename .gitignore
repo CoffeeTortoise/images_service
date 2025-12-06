@@ -4,8 +4,8 @@
 *.jpg
 *.jpeg
 *.sqlite3
-main.py
 __pycache__/
+.pytest_cache/
 images/
 env3/
 env/
