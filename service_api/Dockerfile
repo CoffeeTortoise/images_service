@@ -8,9 +8,9 @@ RUN pip install --no-cache-dir -r requirements.txt
 
 COPY . /app
 
-EXPOSE 2001
+EXPOSE 9999
 
 ENV PYTHONDONTWRITEBYTECODE 1
 ENV PYHTONUNBUFFERED 1
 
-CMD ["python", "main.py"]
+CMD ["fastapi", "dev", "image_process.py", "--port", "9999"]

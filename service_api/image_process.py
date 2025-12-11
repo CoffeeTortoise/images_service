@@ -7,6 +7,8 @@ from fastapi import (
 
 from fastapi.responses import JSONResponse
 
+from fastapi.middleware.cors import CORSMiddleware
+
 from celery import shared_task
 from email.mime.text import MIMEText
 
@@ -20,6 +22,16 @@ import io
 
 
 api = FastAPI()
+
+api.add_middleware(
+    CORSMiddleware,
+    allow_origins=[
+        '127.0.0.1', 
+        'localhost'
+    ],
+    allow_credentials=True,
+    allow_methods=['*']
+)
 
 IMG_URL = '/analyze_image'
 
@@ -84,12 +96,12 @@ async def analyze_doc(image: UploadFile = File(...), email: str = EMAIL):
 
 @api.exception_handler(404)
 async def not_found_exception_handler(request, exc):
-    return JSONResponse(status_code=404, content={'detail': 'Не найдено'})
+    return JSONResponse(status_code=404, content={'detail': 'Not found!'})
 
 
 @api.exception_handler(422)
 async def unprocessable_entity_exception_handler(request, exc):
-    return JSONResponse(status_code=422, content={'detail': 'Ошибка валидации'})
+    return JSONResponse(status_code=422, content={'detail': 'Unprocessable entity!'})
 
 
 @api.exception_handler(Exception)

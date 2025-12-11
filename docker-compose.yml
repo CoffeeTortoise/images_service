@@ -27,9 +27,9 @@ services:
     depends_on:
       - image_service 
     ports:
-      - "2001:2001"
+      - "9999:9999"
     healthcheck:
-      test: ["CMD", "curl", "-f", "http://service_api:2001/"]
+      test: ["CMD", "curl", "-f", "http://service_api:9999/"]
       interval: 30s
       timeout: 10s
       retries: 5
